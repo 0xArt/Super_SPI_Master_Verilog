@@ -40,7 +40,7 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDR_WIDTH = 15)
         output reg                                   o_busy = 0,        
         output reg                                   o_ss = 1,
         output reg                                   o_mosi = 0,
-        output reg   [DATA_WIDTH+ADDR_WIDTH:0]       o_read_long_word,        
+        output reg   [DATA_WIDTH+ADDR_WIDTH:0]       o_read_long_word = 0,        
         output reg                                   o_burst_read_data_valid = 0,
         output reg                                   o_burst_write_word_request = 0
     );
@@ -97,9 +97,10 @@ spi_master spi_master_inst(
     
     assign o_sclk = (cpol == 0) ? sclk : ~sclk;
     
-   reg [15:0] divider_counter = 0;
-   wire divider_tick;
-   assign divider_tick = (divider_counter == i_divider) ? 1 : 0;
+    reg [15:0] divider_counter = 0;
+    //clock divider
+    wire divider_tick;
+    assign divider_tick = (divider_counter == i_divider) ? 1 : 0;
     //spi divider tick geneartor
     always@(posedge i_clk)begin
         if(i_rst)begin
@@ -157,14 +158,16 @@ spi_master spi_master_inst(
                         state <= S_TRANSMIT_ADDR;
                         o_ss <= 0;
                         data_out <= {i_addr, i_rw, i_data};
-                        if(i_cpha == 0)begin
+                        if(cpha == 0)begin
+                            //to meet setup requirements we must set now for cpha = 0
                             o_mosi <= i_addr[ADDR_WIDTH-1];
                         end
                     end
                     
+                    //shift out addr portion of data_out
+                    //reg in shifted in data from slave into read_data
                     S_TRANSMIT_ADDR: begin
                         case(proc_counter)
-                        
                             0: begin
                                proc_counter <= 1;
                                if(bit_counter > 0 && cpha == 1)begin
@@ -221,11 +224,14 @@ spi_master spi_master_inst(
                         endcase
                     end
                     
+                    //shift out data portion of data_out
+                    //reg in shifted in data from slave into read_data
                     S_TRANSMIT_DATA: begin
                         case(proc_counter)
                             0:begin
                                 proc_counter <= 1;
                                 if(bit_counter == (DATA_WIDTH-1) && burst_enable == 1 && burst_count > 1)begin
+                                    //if in burst mode send out request for new data word
                                     o_burst_write_word_request <= 1;
                                 end
                                 if(cpha == 1)begin
@@ -268,6 +274,7 @@ spi_master spi_master_inst(
                                if(bit_counter == (DATA_WIDTH-1))begin
                                   bit_counter <= 0;
                                   if(burst_enable)begin
+                                        //if in burst mode decrement burst counter
                                         burst_count <= burst_count - 1;
                                         if(burst_count <= 1)begin
                                            state <= S_STOP;
@@ -284,6 +291,7 @@ spi_master spi_master_inst(
                         endcase
                     end
                     
+                    //reg in shifted in data from slave into read_data
                     S_READ_DATA: begin
                         case(proc_counter)
                             0:begin
@@ -347,12 +355,14 @@ spi_master spi_master_inst(
                                 proc_counter <= 1;
                                 o_burst_read_data_valid <= 0;
                                 if(cpha == 1)begin
+                                    //read here to meet SPI timing requirements if cpha = 1
                                     read_data[0] <= i_miso;
                                     read_data[DATA_WIDTH+ADDR_WIDTH:1] <= read_data[DATA_WIDTH+ADDR_WIDTH-1:0];
                                end
                             end
                             
                             1: begin
+                               //latch out read_data to o_read_long_word output
                                o_read_long_word <= read_data;
                                o_ss <= 1;
                                o_mosi <= 0;
