@@ -83,7 +83,7 @@ spi_master spi_master_inst(
     reg [7:0] proc_counter = 0;
     reg [7:0] bit_counter = 0;
     reg [DATA_WIDTH+ADDR_WIDTH:0] data_out = 0;
-    reg [31:0] read_data = 0;
+    reg [DATA_WIDTH+ADDR_WIDTH:0] read_data = 0;
     reg        burst_enable = 0;
     reg        rw = 0;
     reg        cpha = 0;
