@@ -36,7 +36,7 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDR_WIDTH = 15)
         input  wire                                  i_cpol,
         input  wire                                  i_miso,
         output wire                                  o_sclk,
-        output wire  [15:0]                          o_read_word,
+        output wire  [DATA_WIDTH-1:0]                o_read_word,
         output reg                                   o_busy = 0,        
         output reg                                   o_ss = 1,
         output reg                                   o_mosi = 0,
