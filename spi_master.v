@@ -37,10 +37,10 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDR_WIDTH = 15)
         input  wire                                  i_miso,
         output wire                                  o_sclk,
         output wire  [DATA_WIDTH-1:0]                o_read_word,
-        output reg                                   o_busy = 0,        
+        output reg                                   o_busy = 0,
         output reg                                   o_ss = 1,
         output reg                                   o_mosi = 0,
-        output reg   [DATA_WIDTH+ADDR_WIDTH:0]       o_read_long_word = 0,        
+        output reg   [DATA_WIDTH+ADDR_WIDTH:0]       o_read_long_word = 0,
         output reg                                   o_burst_read_data_valid = 0,
         output reg                                   o_burst_write_word_request = 0
     );
