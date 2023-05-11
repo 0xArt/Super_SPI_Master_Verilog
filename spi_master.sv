@@ -66,6 +66,91 @@ logic                                           _master_out_slave_in;
 logic       [DATA_WIDTH+ADDR_WIDTH:0]           _read_long_data;
 logic                                           _burst_data_valid;
 logic                                           _burst_data_ready;
+reg         [7:0]                               process_counter;
+logic       [7:0]                               _process_counter;
+reg         [7:0]                               bit_counter;
+logic       [7:0]                               _bit_counter;
+reg                                             saved_clock_phase;
+logic                                           _saved_clock_phase;
+reg                                             saved_clock_polarity;
+logic                                           _saved_clock_polarity;
+reg                                             saved_read_write;
+logic                                           _saved_read_write;
+reg         [15:0]                              saved_burst_count;
+logic       [15:0]                              _saved_burst_count;
+reg         [15:0]                              divider_counter;
+logic       [15:0]                              _divider_counter;
+reg                                             divider_tick;
+logic                                           _divider_tick;
+
+
+always_comb begin
+    _state                  =   state;
+    _process_counter        =   process_counter;
+    _serial_clock           =   serial_clock;
+    _read_data              =   read_data;
+    _busy                   =   busy;
+    _slave_select           =   slave_select;
+    _master_out_slave_in    =   master_out_slave_in;
+    _bit_counter            =   bit_counter;
+    _saved_clock_phase      =   saved_clock_phase;
+    _saved_clock_polarity   =   saved_clock_polarity;
+    _saved_read_write       =   saved_read_write;
+    _saved_burst_count      =   saved_burst_count;
+    _divider_counter        =   divider_counter;
+    _divider_tick           =   divider_tick;
+
+    if (divider_counter == divider) begin
+        _divider_counter    =   0;
+        divider_tick        =   1;
+    end
+    else begin
+        _divider_counter    =   divider_counter + 1;
+        divider_tick        =   0;
+    end
+
+    case (state)
+        S_IDLE: begin
+
+        end
+    endcase
+
+end
+
+always_ff @(posedge clock) begin
+    if (!reset_n) begin
+        state                           <=  S_IDLE;
+        process_counter                 <=  0;
+        serial_clock                    <=  0;
+        read_data                       <=  0;
+        busy                            <=  0;
+        slave_select                    <=  0;
+        master_out_slave_in             <=  0;
+        bit_counter                     <=  0;
+        saved_clock_phase               <=  0;
+        saved_clock_polarity            <=  0;
+        divider_counter                 <=  0;
+        divider_tick                    <=  0;
+        saved_read_write                <=  0;
+        saved_burst_count               <=  0;
+    end
+    else begin
+        state                           <=  _state;
+        process_counter                 <=  _process_counter;
+        serial_clock                    <=  _serial_clock;
+        read_data                       <=  _read_data;
+        busy                            <=  _busy;
+        slave_select                    <=  _slave_select;
+        master_out_slave_in             <=  _master_out_slave_in;
+        bit_counter                     <=  _bit_counter;
+        saved_clock_phase               <=  _saved_clock_phase;
+        saved_clock_polarity            <=  _saved_clock_polarity;
+        divider_counter                 <=  _divider_counter;
+        divider_tick                    <=  _divider_tick;
+        saved_read_write                <=  _saved_read_write;
+        saved_burst_count               <=  _saved_burst_count;
+    end
+end
 
 
 endmodule
