@@ -113,6 +113,7 @@ always_comb begin
     _saved_burst_enable     =   saved_burst_enable;
     _write_shift_register   =   write_shift_register;
     _read_shift_register    =   read_shift_register;
+    _burst_data_valid       =   0;
 
     if (divider_counter == divider) begin
         _divider_counter    =   0;
@@ -302,17 +303,65 @@ always_comb begin
                         end
 
                     end
-
                     3: begin
                         _process_counter    =   0;
                         _serial_clock       =   0;
 
+                        if (saved_clock_phase == 0) begin
+                            _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
+                            _write_shift_register   =   {write_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0], 1'b0};
+                        end
+
+                        if (bit_counter == DATA_WIDTH - 1) begin
+                            _bit_counter    =   0;
+
+                            if (saved_burst_enable) begin
+                                _saved_burst_count  =   saved_burst_count - 1;
+                                _burst_data_valid   =   1;
+
+                                if (saved_burst_count <= 1) begin
+                                    _state = S_STOP;
+                                end
+                            end
+                            else begin
+                                _state  =   S_STOP;
+                            end
+                        end
+                        else begin
+                            _bit_counter    =   bit_counter + 1;
+                        end
                     end
                 endcase
             end
         end
-    endcase
+        S_STOP: begin
+            if (divider_tick) begin
+                0: begin
+                    _process_counter    =   1;
 
+                    if (saved_clock_phase == 1) begin
+                        //read here to meet SPI timing requirements if cpha = 1
+                        _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                        _read_shift_register[0]                             = master_in_slave_out;
+                    end
+                end
+                1: begin
+                    _read_long_data         = read_data;
+                    _slave_select           = 1;
+                    _master_out_slave_in    = 0;
+                    _process_counter        = 2;
+                end
+                2: begin
+                    _process_counter        = 3;
+                end
+                3: begin
+                    _process_counter        = 0;
+                    _busy                   = 0;
+                    _state                  = S_IDLE;
+                end
+            end
+        end
+    endcase
 end
 
 always_ff @(posedge clock) begin
@@ -336,6 +385,7 @@ always_ff @(posedge clock) begin
         read_shift_register             <=  0;
         write_shift_register            <=  0;
         saved_burst_enable              <=  0;
+        burst_data_valid                <=  0;
     end
     else begin
         state                           <=  _state;
@@ -357,6 +407,7 @@ always_ff @(posedge clock) begin
         read_shift_register             <=  _read_shift_register;
         write_shift_register            <=  _write_shift_register;
         saved_burst_enable              <=  _saved_burst_enable;
+        burst_data_valid                <=  _burst_data_valid;
     end
 end
 

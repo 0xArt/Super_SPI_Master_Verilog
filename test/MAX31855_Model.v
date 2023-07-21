@@ -21,11 +21,11 @@
 
 
 module MAX31855_Model(
-        input wire i_system_clk,
-        input wire i_sck,
-        input wire i_cs,
-        output wire o_so
+        input   wire i_system_clk,
+        input   wire i_sck,
+        input   wire i_cs,
 
+        output  wire o_so
     );
 
        reg so = 0;
@@ -43,6 +43,7 @@ module MAX31855_Model(
             sck_sample[0]      <= i_sck;
             sck_sample[1]      <= sck_sample[0];
             sck_sample[2]      <= sck_sample[1];
+
             if(~i_cs)begin
                 so <= data_two[counter];
                 if(i_sck_pos_edge)begin
@@ -53,8 +54,6 @@ module MAX31855_Model(
                 //counter <= 31;
                 data_two <= data;
             end
-            
        end
-       
-       
+
 endmodule
