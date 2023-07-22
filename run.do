@@ -7,7 +7,7 @@ vmap presynth presynth
 
 vlog -sv -work presynth \
     "rtl/spi_master.sv" \
-    "test/MAX31855_Model.v \"
+    "test/spi_slave_sim_model.sv \"
 
 vsim -voptargs=+acc -L presynth -work presynth -t 1ps presynth.testbench
 add log -r /*
