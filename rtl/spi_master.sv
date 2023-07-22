@@ -21,27 +21,27 @@
 //////////////////////////////////////////////////////////////////////////////////
 module spi_master #(parameter DATA_WIDTH = 16, parameter ADDRESS_WIDTH = 15)
 (
-    input   wire                            clock,
-    input   wire                            reset_n,
-    input   wire    [DATA_WIDTH-1:0]        data,
-    input   wire    [ADDRESS_WIDTH-1:0]     address,
-    input   wire                            read_write,
-    input   wire                            enable,
-    input   wire                            burst_enable,
-    input   wire    [15:0]                  burst_count,
-    input   wire    [15:0]                  divider,
-    input   wire                            clock_phase,
-    input   wire                            clock_polarity,
-    input   wire                            master_in_slave_out,
+    input   wire                                clock,
+    input   wire                                reset_n,
+    input   wire    [DATA_WIDTH-1:0]            data,
+    input   wire    [ADDRESS_WIDTH-1:0]         address,
+    input   wire                                read_write,
+    input   wire                                enable,
+    input   wire                                burst_enable,
+    input   wire    [15:0]                      burst_count,
+    input   wire    [15:0]                      divider,
+    input   wire                                clock_phase,
+    input   wire                                clock_polarity,
+    input   wire                                master_in_slave_out,
 
-    output  reg                             serial_clock,
-    output  reg  [DATA_WIDTH-1:0]           read_data,
-    output  reg                             busy,
-    output  reg                             slave_select,
-    output  reg                             master_out_slave_in,
-    output  reg [DATA_WIDTH+ADDR_WIDTH:0]   read_long_data,
-    output  reg                             burst_data_valid,
-    output  reg                             burst_data_ready
+    output  reg                                 serial_clock,
+    output  reg  [DATA_WIDTH-1:0]               read_data,
+    output  reg                                 busy,
+    output  reg                                 slave_select,
+    output  reg                                 master_out_slave_in,
+    output  reg [DATA_WIDTH+ADDRESS_WIDTH:0]    read_long_data,
+    output  reg                                 burst_data_valid,
+    output  reg                                 burst_data_ready
 );
 
 typedef enum
@@ -63,7 +63,7 @@ logic       [DATA_WIDTH-1:0]                    _read_data;
 logic                                           _busy;
 logic                                           _slave_select;
 logic                                           _master_out_slave_in;
-logic       [DATA_WIDTH+ADDR_WIDTH:0]           _read_long_data;
+logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_long_data;
 logic                                           _burst_data_valid;
 logic                                           _burst_data_ready;
 reg         [7:0]                               process_counter;
@@ -80,18 +80,17 @@ reg         [15:0]                              saved_burst_count;
 logic       [15:0]                              _saved_burst_count;
 reg         [15:0]                              divider_counter;
 logic       [15:0]                              _divider_counter;
-reg                                             divider_tick;
-logic                                           _divider_tick;
+logic                                           divider_tick;
 reg         [ADDRESS_WIDTH-1:0]                 saved_address;
 logic       [ADDRESS_WIDTH-1:0]                 _saved_address;
 reg         [DATA_WIDTH-1:0]                    saved_data;
 logic       [DATA_WIDTH-1:0]                    _saved_data;
 reg                                             saved_burst_enable;
 logic                                           _saved_burst_enable;
-reg         [DATA_WIDTH+ADDR_WIDTH:0]           write_shift_register;
-logic       [DATA_WIDTH+ADDR_WIDTH:0]           _write_shift_register;
-reg         [DATA_WIDTH+ADDR_WIDTH:0]           read_shift_register;
-logic       [DATA_WIDTH+ADDR_WIDTH:0]           _read_shift_register;
+reg         [DATA_WIDTH+ADDRESS_WIDTH:0]        write_shift_register;
+logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _write_shift_register;
+reg         [DATA_WIDTH+ADDRESS_WIDTH:0]        read_shift_register;
+logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_shift_register;
 
 always_comb begin
     _state                  =   state;
@@ -107,12 +106,13 @@ always_comb begin
     _saved_read_write       =   saved_read_write;
     _saved_burst_count      =   saved_burst_count;
     _divider_counter        =   divider_counter;
-    _divider_tick           =   divider_tick;
     _saved_address          =   saved_address;
     _saved_data             =   saved_data;
     _saved_burst_enable     =   saved_burst_enable;
     _write_shift_register   =   write_shift_register;
     _read_shift_register    =   read_shift_register;
+    _read_long_data         =   read_long_data;
+    _burst_data_ready       =   burst_data_ready;
     _burst_data_valid       =   0;
 
     if (divider_counter == divider) begin
@@ -154,12 +154,12 @@ always_comb begin
         end
         S_TRANSMIT_ADDRESS: begin
             if (divider_tick) begin
-                case (process_counter) begin
+                case (process_counter)
                     0: begin
                         _process_counter    =   1;
 
                         if (bit_counter != 0 && saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                             _read_shift_register[0]                             = master_in_slave_out;
                         end
                         if (bit_counter == 0 && saved_clock_phase == 0) begin
@@ -179,7 +179,7 @@ always_comb begin
                         _process_counter    =   3;
 
                         if (saved_clock_phase == 0) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                             _read_shift_register[0]                             = master_in_slave_out;
                         end
                     end
@@ -205,7 +205,7 @@ always_comb begin
                             _bit_counter = bit_counter + 1;
                         end
                     end
-                end
+                endcase
             end
         end
         S_TRANSMIT_DATA: begin
@@ -218,7 +218,7 @@ always_comb begin
                             _burst_data_ready = 1;
                         end
                         if (saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                             _read_shift_register[0]                             = master_in_slave_out;
                         end
                     end
@@ -235,7 +235,7 @@ always_comb begin
                         _process_counter    =   3;
 
                         if (saved_clock_phase == 0) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                             _read_shift_register[0]                             = master_in_slave_out;
                         end
                         if (burst_data_ready == 1) begin
@@ -280,7 +280,7 @@ always_comb begin
 
                         if (saved_clock_phase == 1) begin
                             if (saved_clock_phase == 0) begin
-                                _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                                _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                                 _read_shift_register[0]                             = master_in_slave_out;
                             end
                         end
@@ -298,7 +298,7 @@ always_comb begin
                         _process_counter    =   3;
 
                         if (saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
                             _read_shift_register[0]                             = master_in_slave_out;
                         end
 
@@ -336,29 +336,31 @@ always_comb begin
         end
         S_STOP: begin
             if (divider_tick) begin
-                0: begin
-                    _process_counter    =   1;
+                case (process_counter)
+                    0: begin
+                        _process_counter    =   1;
 
-                    if (saved_clock_phase == 1) begin
-                        //read here to meet SPI timing requirements if cpha = 1
-                        _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0]
-                        _read_shift_register[0]                             = master_in_slave_out;
+                        if (saved_clock_phase == 1) begin
+                            //read here to meet SPI timing requirements if cpha = 1
+                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
+                            _read_shift_register[0]                             = master_in_slave_out;
+                        end
                     end
-                end
-                1: begin
-                    _read_long_data         = read_data;
-                    _slave_select           = 1;
-                    _master_out_slave_in    = 0;
-                    _process_counter        = 2;
-                end
-                2: begin
-                    _process_counter        = 3;
-                end
-                3: begin
-                    _process_counter        = 0;
-                    _busy                   = 0;
-                    _state                  = S_IDLE;
-                end
+                    1: begin
+                        _read_long_data         = read_data;
+                        _slave_select           = 1;
+                        _master_out_slave_in    = 0;
+                        _process_counter        = 2;
+                    end
+                    2: begin
+                        _process_counter        = 3;
+                    end
+                    3: begin
+                        _process_counter        = 0;
+                        _busy                   = 0;
+                        _state                  = S_IDLE;
+                    end
+                endcase
             end
         end
     endcase
@@ -377,7 +379,6 @@ always_ff @(posedge clock) begin
         saved_clock_phase               <=  0;
         saved_clock_polarity            <=  0;
         divider_counter                 <=  0;
-        divider_tick                    <=  0;
         saved_read_write                <=  0;
         saved_burst_count               <=  0;
         saved_address                   <=  0;
@@ -386,6 +387,8 @@ always_ff @(posedge clock) begin
         write_shift_register            <=  0;
         saved_burst_enable              <=  0;
         burst_data_valid                <=  0;
+        read_long_data                  <=  0;
+        burst_data_ready                <=  0;
     end
     else begin
         state                           <=  _state;
@@ -399,7 +402,6 @@ always_ff @(posedge clock) begin
         saved_clock_phase               <=  _saved_clock_phase;
         saved_clock_polarity            <=  _saved_clock_polarity;
         divider_counter                 <=  _divider_counter;
-        divider_tick                    <=  _divider_tick;
         saved_read_write                <=  _saved_read_write;
         saved_burst_count               <=  _saved_burst_count;
         saved_address                   <=  _saved_address;
@@ -408,6 +410,8 @@ always_ff @(posedge clock) begin
         write_shift_register            <=  _write_shift_register;
         saved_burst_enable              <=  _saved_burst_enable;
         burst_data_valid                <=  _burst_data_valid;
+        read_long_data                  <=  _read_long_data;
+        burst_data_ready                <=  _burst_data_ready;
     end
 end
 

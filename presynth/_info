@@ -1,0 +1,94 @@
+m255
+K4
+z2
+!s99 nomlopt
+!s11f vlog 2021.2 2021.04, Apr 14 2021
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/artin/Documents/Github/Super_SPI_Master_Verilog
+T_opt
+Z1 !s110 1690009142
+V:9[UPS[4I[ga@1M_f4JRl1
+04 9 4 work testbench fast 0
+=1-000ae431a4f1-64bb7e36-b37a7-1eb90
+!s124 OEM10U3 
+o-quiet -auto_acc_if_foreign -work presynth -L presynth +acc
+Z2 tCvgOpt 0
+n@_opt
+OL;O;2021.2;73
+vspi_master
+Z3 DXx6 sv_std 3 std 0 22 9oUSJO;AeEaW`l:M@^WG92
+R1
+!i10b 1
+!s100 EZaI`]BP^0]^47fa7o7PW0
+Io4VCE<BVATDf<ozHHYP@O1
+S1
+R0
+w1690009130
+8rtl/spi_master.sv
+Frtl/spi_master.sv
+!i122 0
+L0 22 398
+Z4 VDg1SIo80bB@j0V0VzS_@n1
+Z5 OL;L;2021.2;73
+r1
+!s85 0
+31
+Z6 !s108 1690009142.000000
+Z7 !s107 test/testbench.sv|test/spi_slave_sim_model.sv|rtl/spi_master.sv|
+Z8 !s90 -reportprogress|300|-sv|-work|presynth|rtl/spi_master.sv|test/spi_slave_sim_model.sv|test/testbench.sv|
+!i113 0
+Z9 o-sv -work presynth -L mtiAvm -L mtiRnm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+R2
+vspi_slave_sim_model
+R3
+R1
+!i10b 1
+!s100 7iz5bGiOWij0J9dm43m^e3
+I7GgEN5n^ZhUhb[0U1UOJ]0
+S1
+R0
+w1690008873
+8test/spi_slave_sim_model.sv
+Ftest/spi_slave_sim_model.sv
+!i122 0
+L0 22 58
+R4
+R5
+r1
+!s85 0
+31
+R6
+R7
+R8
+!i113 0
+R9
+R2
+vtestbench
+R3
+R1
+!i10b 1
+!s100 WQk?4P?D9EE5XPSnaN_7C0
+Ij7G0YbKkn]z5zg2X<E0X:1
+S1
+R0
+w1690008394
+8test/testbench.sv
+Ftest/testbench.sv
+!i122 0
+L0 24 133
+R4
+R5
+r1
+!s85 0
+31
+R6
+R7
+R8
+!i113 0
+R9
+R2

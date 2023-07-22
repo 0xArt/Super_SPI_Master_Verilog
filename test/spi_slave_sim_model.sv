@@ -28,21 +28,19 @@ module spi_slave_sim_model(
     output  wire    serial_out
 );
 
-reg so = 0;
-assign o_so = (i_cs == 0) ? so : 1'bZ;
-
 
 logic           _serial_data;
 reg             serial_data;
-logic           _serial_clock_delay;
+logic   [2:0]   _serial_clock_delay;
 reg     [2:0]   serial_clock_delay;
 logic           serial_clock_positive_edge;
 logic           serial_clock_negative_edge;
 reg     [4:0]   counter;
 logic   [4:0]   _counter;
-wire    [31:0]  data = 32'hACDC1112;
+wire    [31:0]  data;
 
-assign  serial_out  =   (!chip_select) ? serial_data : 1'bZ;
+assign  serial_out      =   (!chip_select) ? serial_data : 1'bZ;
+assign  data            =   32'hACDC1112;
 
 always_comb begin
     _counter                =   counter;
@@ -55,7 +53,8 @@ always_comb begin
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
 
     if (!chip_select) begin
-        _serial_out         =   data[counter];
+        _serial_data    =   data[counter];
+
         if (serial_clock_positive_edge) begin
             _counter    =   counter + 1;
         end
