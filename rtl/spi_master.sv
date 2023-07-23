@@ -159,8 +159,7 @@ always_comb begin
                         _process_counter    =   1;
 
                         if (bit_counter != 0 && saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                         if (bit_counter == 0 && saved_clock_phase == 0) begin
                             _write_shift_register = {write_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0], 1'b0};
@@ -179,8 +178,7 @@ always_comb begin
                         _process_counter    =   3;
 
                         if (saved_clock_phase == 0) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                     end
                     3: begin
@@ -218,8 +216,7 @@ always_comb begin
                             _burst_data_ready = 1;
                         end
                         if (saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                     end
                     1: begin
@@ -235,8 +232,8 @@ always_comb begin
                         _process_counter    =   3;
 
                         if (saved_clock_phase == 0) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
+
                         end
                         if (burst_data_ready == 1) begin
                             _burst_data_ready                                                   = 0;
@@ -280,8 +277,7 @@ always_comb begin
 
                         if (saved_clock_phase == 1) begin
                             if (saved_clock_phase == 0) begin
-                                _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                                _read_shift_register[0]                             = master_in_slave_out;
+                                _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                             end
                         end
                     end
@@ -297,11 +293,9 @@ always_comb begin
                     2: begin
                         _process_counter    =   3;
 
-                        if (saved_clock_phase == 1) begin
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                        if (saved_clock_phase == 0) begin
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
-
                     end
                     3: begin
                         _process_counter    =   0;
@@ -342,8 +336,7 @@ always_comb begin
 
                         if (saved_clock_phase == 1) begin
                             //read here to meet SPI timing requirements if cpha = 1
-                            _read_shift_register[DATA_WIDTH+ADDRESS_WIDTH:1]    = read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0];
-                            _read_shift_register[0]                             = master_in_slave_out;
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                     end
                     1: begin
@@ -366,7 +359,7 @@ always_comb begin
     endcase
 end
 
-always_ff @(posedge clock) begin
+always_ff @(posedge clock or negedge reset_n) begin
     if (!reset_n) begin
         state                           <=  S_IDLE;
         process_counter                 <=  0;
