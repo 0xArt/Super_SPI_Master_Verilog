@@ -41,6 +41,7 @@ logic   [4:0]   _counter;
 wire    [31:0]  data;
 logic   [31:0]  _read_data;
 reg     [31:0]  read_data;
+
 assign  serial_out      =   (!chip_select) ? serial_data : 1'bZ;
 assign  data            =   32'hACDC1112;
 
@@ -56,11 +57,9 @@ always_comb begin
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
 
     if (!chip_select) begin
-
         if (serial_clock_positive_edge) begin
             _read_data = {read_data[30:0], serial_in};
         end
-
         if (serial_clock_negative_edge) begin
             _counter    =   counter - 1;
         end

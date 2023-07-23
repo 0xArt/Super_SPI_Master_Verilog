@@ -7,6 +7,7 @@ vmap presynth presynth
 
 vlog -sv -work presynth \
     "rtl/spi_master.sv" \
+    "rtl/spi_burst_receiver.sv" \
     "test/spi_slave_sim_model.sv" \
     "test/testbench.sv"
 

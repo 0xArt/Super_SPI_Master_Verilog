@@ -85,6 +85,32 @@ spi_master(
     .burst_data_ready       (spi_master_burst_data_ready)
 );
 
+wire            spi_burst_receiver_clock;
+wire            spi_burst_receiver_reset_n;
+wire            spi_burst_receiver_enable;
+wire    [15:0]  spi_burst_receiver_burst_count;
+wire            spi_burst_receiver_data_enable;
+wire    [15:0]  spi_burst_receiver_burst_data;
+
+wire            spi_burst_receiver_busy;
+wire            spi_burst_reciever_data_valid;
+wire    [15:0]  spi_burst_receiver_memory_address;
+wire    [15:0]  spi_burst_receiver_data;
+
+spi_burst_receiver  spi_burst_receiver(
+    .clock                  (spi_burst_receiver_clock),
+    .reset_n                (spi_burst_receiver_reset_n),
+    .enable                 (spi_burst_receiver_enable),
+    .burst_count            (spi_burst_receiver_burst_count),
+    .burst_data_enable      (spi_burst_receiver_data_enable),
+    .burst_data             (spi_burst_receiver_burst_data),
+
+    .busy                   (spi_burst_receiver_busy),
+    .data_valid             (spi_burst_reciever_data_valid),
+    .memory_address         (spi_burst_receiver_memory_address),
+    .data                   (spi_burst_receiver_data)
+);
+
 
 wire    spi_slave_sim_model_clock;
 wire    spi_slave_sim_model_reset_n;
