@@ -22,7 +22,6 @@
 `define _case_000_svh_
 
 task case_000();
-
     $display(" Writing value 16'hBEEF to address h7FFF");
     $display("Configuring master");
     @(posedge testbench.clock);

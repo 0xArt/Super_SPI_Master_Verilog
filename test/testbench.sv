@@ -21,21 +21,23 @@
 //////////////////////////////////////////////////////////////////////////////////
 `include "./case_000/case_000.svh"
 `include "./case_001/case_001.svh"
+`include "./case_002/case_002.svh"
 module testbench;
 
 localparam  DATA_WIDTH      =   16;
 localparam  ADDRESS_WIDTH   =   15;
 
-real            clock_delay_50      = ((1/ (50e6))/2)*(1e9);
-reg             clock               = 0;
-reg             reset_n             = 1;
-reg             enable              = 0;
-reg             rw                  = 0;
-reg     [7:0]   reg_addr            = 0;
-reg     [14:0]  address             = 15'b001_0001_0001_0001;
-reg     [15:0]  divider             = 16'h0003;
-reg     [15:0]  data_to_write       = 16'h00;
-
+real            clock_delay_50      =   ((1/ (50e6))/2)*(1e9);
+reg             clock               =   0;
+reg             reset_n             =   1;
+reg             enable              =   0;
+reg             rw                  =   0;
+reg     [7:0]   reg_addr            =   0;
+reg     [14:0]  address             =   15'b001_0001_0001_0001;
+reg     [15:0]  divider             =   16'h0003;
+reg     [15:0]  data_to_write       =   16'h00;
+reg     [15:0]  burst_count         =   16'h00;
+reg             burst_enable        =   0;
 
 wire                                    spi_master_clock;
 wire                                    spi_master_reset_n;
@@ -155,6 +157,9 @@ initial begin
     $display("Running case 001");
     case_001();
 
+    $display("Running case 002");
+    case_002();
+
     $display("Tests have finsihed");
     $stop();
 end
@@ -166,8 +171,8 @@ assign spi_master_data                  =   data_to_write;
 assign spi_master_address               =   address;
 assign spi_master_read_write            =   rw;
 assign spi_master_enable                =   enable;
-assign spi_master_burst_enable          =   0;
-assign spi_master_burst_count           =   0;
+assign spi_master_burst_enable          =   burst_enable;
+assign spi_master_burst_count           =   burst_count;
 assign spi_master_divider               =   divider;
 assign spi_master_clock_phase           =   0;
 assign spi_master_clock_polarity        =   0;

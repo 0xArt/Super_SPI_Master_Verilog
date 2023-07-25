@@ -129,7 +129,8 @@ always_comb begin
             _saved_clock_phase      =   clock_phase;
             _saved_clock_polarity   =   clock_polarity;
             _saved_read_write       =   read_write;
-            _saved_burst_count      =   saved_burst_count;
+            _saved_burst_count      =   burst_count;
+            _saved_burst_enable     =   burst_enable;
             _saved_address          =   address;
             _saved_data             =   data;
             _busy                   =   busy;
