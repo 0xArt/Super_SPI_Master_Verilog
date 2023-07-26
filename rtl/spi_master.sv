@@ -21,27 +21,27 @@
 //////////////////////////////////////////////////////////////////////////////////
 module spi_master #(parameter DATA_WIDTH = 16, parameter ADDRESS_WIDTH = 15)
 (
-    input   wire                                clock,
-    input   wire                                reset_n,
-    input   wire    [DATA_WIDTH-1:0]            data,
-    input   wire    [ADDRESS_WIDTH-1:0]         address,
-    input   wire                                read_write,
-    input   wire                                enable,
-    input   wire                                burst_enable,
-    input   wire    [15:0]                      burst_count,
-    input   wire    [15:0]                      divider,
-    input   wire                                clock_phase,
-    input   wire                                clock_polarity,
-    input   wire                                master_in_slave_out,
+    input   wire                                    clock,
+    input   wire                                    reset_n,
+    input   wire    [DATA_WIDTH-1:0]                data,
+    input   wire    [ADDRESS_WIDTH-1:0]             address,
+    input   wire                                    read_write,
+    input   wire                                    enable,
+    input   wire                                    burst_enable,
+    input   wire    [15:0]                          burst_count,
+    input   wire    [15:0]                          divider,
+    input   wire                                    clock_phase,
+    input   wire                                    clock_polarity,
+    input   wire                                    master_in_slave_out,
 
-    output  reg                                 serial_clock,
-    output  reg  [DATA_WIDTH-1:0]               read_data,
-    output  reg                                 busy,
-    output  reg                                 slave_select,
-    output  reg                                 master_out_slave_in,
-    output  reg [DATA_WIDTH+ADDRESS_WIDTH:0]    read_long_data,
-    output  reg                                 burst_data_valid,
-    output  reg                                 burst_data_ready
+    output  reg                                     serial_clock,
+    output  reg     [DATA_WIDTH-1:0]                read_data,
+    output  reg                                     busy,
+    output  reg                                     slave_select,
+    output  reg                                     master_out_slave_in,
+    output  reg     [DATA_WIDTH+ADDRESS_WIDTH:0]    read_long_data,
+    output  reg                                     read_data_valid,
+    output  reg                                     burst_data_ready
 );
 
 typedef enum
@@ -64,7 +64,7 @@ logic                                           _busy;
 logic                                           _slave_select;
 logic                                           _master_out_slave_in;
 logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_long_data;
-logic                                           _burst_data_valid;
+logic                                           _read_data_valid;
 logic                                           _burst_data_ready;
 reg         [7:0]                               process_counter;
 logic       [7:0]                               _process_counter;
@@ -113,7 +113,7 @@ always_comb begin
     _read_shift_register    =   read_shift_register;
     _read_long_data         =   read_long_data;
     _burst_data_ready       =   burst_data_ready;
-    _burst_data_valid       =   0;
+    _read_data_valid        =   0;
 
     if (divider_counter == divider) begin
         _divider_counter    =   0;
@@ -312,7 +312,9 @@ always_comb begin
 
                             if (saved_burst_enable) begin
                                 _saved_burst_count  =   saved_burst_count - 1;
-                                _burst_data_valid   =   1;
+                                _read_long_data     = read_shift_register;
+                                _read_data          = read_shift_register[DATA_WIDTH-1:0];
+                                _read_data_valid    =   1;
 
                                 if (saved_burst_count <= 1) begin
                                     _state = S_STOP;
@@ -341,7 +343,9 @@ always_comb begin
                         end
                     end
                     1: begin
-                        _read_long_data         = read_data;
+                        _read_long_data         = read_shift_register;
+                        _read_data              = read_shift_register[DATA_WIDTH-1:0];
+                        _read_data_valid        = 1;
                         _slave_select           = 1;
                         _master_out_slave_in    = 0;
                         _process_counter        = 2;
@@ -380,7 +384,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_shift_register             <=  0;
         write_shift_register            <=  0;
         saved_burst_enable              <=  0;
-        burst_data_valid                <=  0;
+        read_data_valid                 <=  0;
         read_long_data                  <=  0;
         burst_data_ready                <=  0;
     end
@@ -403,7 +407,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_shift_register             <=  _read_shift_register;
         write_shift_register            <=  _write_shift_register;
         saved_burst_enable              <=  _saved_burst_enable;
-        burst_data_valid                <=  _burst_data_valid;
+        read_data_valid                 <=  _read_data_valid;
         read_long_data                  <=  _read_long_data;
         burst_data_ready                <=  _burst_data_ready;
     end

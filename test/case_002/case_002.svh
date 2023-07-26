@@ -5,7 +5,7 @@
 //
 // Create Date:   7/23/2020
 // Design Name:
-// Module Name:    case_002
+// Module Name:   case_002
 // Project Name:
 // Target Devices:
 // Tool versions:
@@ -30,20 +30,21 @@ task case_002();
     testbench.data_to_write     = 16'hBEEF;
     testbench.divider           = 16'h03;       //divider value for serial clock
     testbench.burst_count       = 16'h03;       //triple round burst
-    testbench.burst_enable      = 16'h01;
+    testbench.burst_enable      = 1;
     @(posedge testbench.clock);
     $display("Enabling master");
     testbench.enable        = 1;
     @(posedge testbench.spi_master_busy);
     $display("Master has started reading");
     testbench.enable        = 0;
+    testbench.burst_enable  = 0;
     @(posedge testbench.spi_master_burst_data_ready);
     testbench.data_to_write     = 16'hF00D;
     @(posedge testbench.spi_master_burst_data_ready);
     testbench.data_to_write     = 16'hACDC;
     @(negedge testbench.spi_master_burst_data_ready);
     assert (testbench.spi_slave_sim_model.read_data == 32'hBEEFF00D) $display ("Slaved received correct data from master");
-        else $error("The data slave read does not match what the master put out. Expected %h but got %h", 16'hBEEFF00D, testbench.spi_slave_sim_model.read_data);
+        else $error("The data slave read does not match what the master put out. Expected %h but got %h", 32'hBEEFF00D, testbench.spi_slave_sim_model.read_data);
     @(negedge testbench.spi_master_busy);
     $display("Master has finsihed reading");
     assert (testbench.spi_slave_sim_model.read_data == 32'hF00DACDC) $display ("Slaved received correct data from master");

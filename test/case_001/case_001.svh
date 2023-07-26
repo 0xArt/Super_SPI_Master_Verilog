@@ -5,7 +5,7 @@
 //
 // Create Date:   7/22/2020
 // Design Name:
-// Module Name:    case_001
+// Module Name:   case_001
 // Project Name:
 // Target Devices:
 // Tool versions:
@@ -39,7 +39,7 @@ task case_001();
     $display("Master has finsihed reading");
     assert (testbench.spi_slave_sim_model.read_data == {testbench.address, testbench.rw, testbench.data_to_write}) $display ("Slaved received correct data from master");
         else $error("The data slave read does not match what the master put out. Expected %h but got %h", {testbench.address, testbench.rw, testbench.data_to_write}, testbench.spi_slave_sim_model.read_data);
-    assert (testbench.spi_master.read_shift_register == 32'hACDC1112) $display ("Mater received correct data from slave");
+    assert (testbench.spi_master_read_long_data == 32'hACDC1112) $display ("Mater received correct data from slave");
         else $error("The data master read does not match what the slave put out. Expected %h but got %h", 32'hACDC1112, testbench.spi_slave_sim_model.read_data);
 endtask: case_001
 

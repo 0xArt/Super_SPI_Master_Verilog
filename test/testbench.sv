@@ -22,6 +22,7 @@
 `include "./case_000/case_000.svh"
 `include "./case_001/case_001.svh"
 `include "./case_002/case_002.svh"
+`include "./case_003/case_003.svh"
 module testbench;
 
 localparam  DATA_WIDTH      =   16;
@@ -58,7 +59,7 @@ wire                                    spi_master_busy;
 wire                                    spi_master_slave_select;
 wire                                    spi_master_master_out_slave_in;
 wire    [DATA_WIDTH+ADDRESS_WIDTH:0]    spi_master_read_long_data;
-wire                                    spi_master_burst_data_valid;
+wire                                    spi_master_read_data_valid;
 wire                                    spi_master_burst_data_ready;
 
 
@@ -83,7 +84,7 @@ spi_master(
     .slave_select           (spi_master_slave_select),
     .master_out_slave_in    (spi_master_master_out_slave_in),
     .read_long_data         (spi_master_read_long_data),
-    .burst_data_valid       (spi_master_burst_data_valid),
+    .read_data_valid        (spi_master_read_data_valid),
     .burst_data_ready       (spi_master_burst_data_ready)
 );
 
@@ -160,6 +161,9 @@ initial begin
     $display("Running case 002");
     case_002();
 
+    $display("Running case 003");
+    case_003();
+
     $display("Tests have finsihed");
     $stop();
 end
@@ -183,6 +187,13 @@ assign spi_slave_sim_model_reset_n      =   reset_n;
 assign spi_slave_sim_model_serial_in    =   spi_master_master_out_slave_in;
 assign spi_slave_sim_model_serial_clock =   spi_master_serial_clock;
 assign spi_slave_sim_model_chip_select  =   spi_master_slave_select;
+
+assign spi_burst_receiver_clock         =   clock;
+assign spi_burst_receiver_reset_n       =   reset_n;
+assign spi_burst_receiver_enable        =   burst_enable && spi_master_read_write;
+assign spi_burst_receiver_burst_count   =   burst_count;
+assign spi_burst_receiver_data_enable   =   spi_master_read_data_valid;
+assign spi_burst_receiver_burst_data    =   spi_master_read_data;
 
 
 endmodule

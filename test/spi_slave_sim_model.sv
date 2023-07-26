@@ -46,13 +46,12 @@ assign  serial_out      =   (!chip_select) ? serial_data : 1'bZ;
 assign  data            =   32'hACDC1112;
 
 always_comb begin
-    _counter                =   counter;
-    _serial_data            =   data[counter];
-    _serial_clock_delay[0]  =   serial_clock;
-    _serial_clock_delay[1]  =   serial_clock_delay[0];
-    _serial_clock_delay[2]  =   serial_clock_delay[1];
-    _read_data              =   read_data;
-
+    _counter                    =   counter;
+    _serial_data                =   data[counter];
+    _serial_clock_delay[0]      =   serial_clock;
+    _serial_clock_delay[1]      =   serial_clock_delay[0];
+    _serial_clock_delay[2]      =   serial_clock_delay[1];
+    _read_data                  =   read_data;
     serial_clock_positive_edge  =   !serial_clock_delay[1] && serial_clock_delay[0];
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
 

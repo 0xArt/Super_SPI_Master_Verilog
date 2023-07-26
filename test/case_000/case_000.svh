@@ -5,7 +5,7 @@
 //
 // Create Date:   7/22/2020
 // Design Name:
-// Module Name:    case_000
+// Module Name:   case_000
 // Project Name:
 // Target Devices:
 // Tool versions:

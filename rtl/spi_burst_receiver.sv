@@ -103,6 +103,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         memory_address                  <=  0;
         busy                            <=  0;
         data_valid                      <=  0;
+        data                            <=  0;
     end
     else begin
         state                           <=  _state;
@@ -111,6 +112,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         memory_address                  <=  _memory_address;
         busy                            <=  _busy;
         data_valid                      <=  _data_valid;
+        data                            <=  _data;
     end
 end
 
