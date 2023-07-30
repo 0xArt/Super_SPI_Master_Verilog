@@ -28,7 +28,8 @@ module spi_slave_sim_model(
     input   wire    clock_polarity,
     input   wire    clock_phase,
 
-    output  wire    serial_out
+    output  wire    serial_out,
+    output  reg     read_data_valid
 );
 
 
@@ -45,6 +46,7 @@ logic   [31:0]  _read_data;
 reg     [31:0]  read_data;
 reg             skip;
 logic           _skip;
+logic           _read_data_valid;
 
 assign  serial_out      =   (!chip_select) ? serial_data : 1'bZ;
 assign  data            =   32'hACDC1112;
@@ -59,12 +61,17 @@ always_comb begin
     _read_data                  =   read_data;
     serial_clock_positive_edge  =   !serial_clock_delay[1] && serial_clock_delay[0];
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
+    _read_data_valid            =   0;
 
     if (!chip_select) begin
         if (clock_polarity == 0) begin
             if (clock_phase == 0) begin
                 if (serial_clock_positive_edge) begin
                     _read_data = {read_data[30:0], serial_in};
+
+                    if (counter == 16 || counter == 0) begin
+                        _read_data_valid = 1;
+                    end
                 end
                 if (serial_clock_negative_edge) begin
                     _counter    =   counter - 1;
@@ -73,6 +80,10 @@ always_comb begin
             else begin
                 if (serial_clock_negative_edge) begin
                     _read_data = {read_data[30:0], serial_in};
+
+                    if (counter == 16 || counter == 0) begin
+                        _read_data_valid = 1;
+                    end
                 end
                 if (serial_clock_positive_edge) begin
                     if (skip) begin
@@ -80,10 +91,6 @@ always_comb begin
                     end
                     else begin
                         _counter    =   counter - 1;
-
-                        if (counter == 0) begin
-                            //_skip = 1;
-                        end
                     end
                 end
             end
@@ -93,6 +100,10 @@ always_comb begin
             if (clock_phase == 0) begin
                 if (serial_clock_negative_edge) begin
                     _read_data = {read_data[30:0], serial_in};
+
+                    if (counter == 16 || counter == 0) begin
+                        _read_data_valid = 1;
+                    end
                 end
                 if (serial_clock_positive_edge) begin
                     _counter    =   counter - 1;
@@ -101,9 +112,19 @@ always_comb begin
             else begin
                 if (serial_clock_positive_edge) begin
                     _read_data = {read_data[30:0], serial_in};
+
+                    if (counter == 16 || counter == 0) begin
+                        _read_data_valid = 1;
+                    end
+
                 end
                 if (serial_clock_negative_edge) begin
-                    _counter    =   counter - 1;
+                    if (skip) begin
+                        _skip       =   0;
+                    end
+                    else begin
+                        _counter    =   counter - 1;
+                    end
                 end
             end
         end
@@ -122,6 +143,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         serial_data         <=  0;
         read_data           <=  0;
         skip                <=  1;
+        read_data_valid     <=  0;
     end
     else begin
         serial_data         <=  _serial_data;
@@ -130,6 +152,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         serial_data         <=  _serial_data;
         read_data           <=  _read_data;
         skip                <=  _skip;
+        read_data_valid     <=  _read_data_valid;
     end
 end
 

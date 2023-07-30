@@ -92,6 +92,8 @@ reg         [DATA_WIDTH+ADDRESS_WIDTH:0]        write_shift_register;
 logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _write_shift_register;
 reg         [DATA_WIDTH+ADDRESS_WIDTH:0]        read_shift_register;
 logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_shift_register;
+reg                                             end_of_burst_word;
+logic                                           _end_of_burst_word;
 
 always_comb begin
     _state                  =   state;
@@ -114,6 +116,7 @@ always_comb begin
     _read_shift_register    =   read_shift_register;
     _read_long_data         =   read_long_data;
     _burst_data_ready       =   burst_data_ready;
+    _end_of_burst_word      =   end_of_burst_word;
     _read_data_valid        =   0;
 
     if (saved_clock_polarity == 0) begin
@@ -147,6 +150,7 @@ always_comb begin
             _write_shift_register   =   0;
             _read_shift_register    =   0;
             _process_counter        =   0;
+            _end_of_burst_word      =   0;
 
             if (enable) begin
                 _busy   =   1;
@@ -171,7 +175,7 @@ always_comb begin
                     0: begin
                         _process_counter    =   1;
 
-                        if (saved_clock_phase == 1) begin
+                        if (saved_clock_phase == 1 && bit_counter != 0) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                     end
@@ -259,6 +263,7 @@ always_comb begin
                         end
                         if (bit_counter == (DATA_WIDTH-1)) begin
                             _bit_counter    =   0;
+
                             if (saved_burst_enable == 1) begin
                                 _saved_burst_count = saved_burst_count - 1;
 
@@ -296,6 +301,12 @@ always_comb begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
                             _write_shift_register   =   {write_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0], 1'b0};
                         end
+                        if (end_of_burst_word) begin
+                            _end_of_burst_word = 0;
+                            _read_long_data     =   read_shift_register;
+                            _read_data          =   read_shift_register[DATA_WIDTH-1:0];
+                            _read_data_valid    =   1;
+                        end
                     end
                     2: begin
                         _process_counter    =   3;
@@ -318,9 +329,15 @@ always_comb begin
 
                             if (saved_burst_enable) begin
                                 _saved_burst_count  =   saved_burst_count - 1;
-                                _read_long_data     =   read_shift_register;
-                                _read_data          =   read_shift_register[DATA_WIDTH-1:0];
-                                _read_data_valid    =   1;
+
+                                if (saved_clock_phase == 0) begin
+                                    _read_long_data     =   read_shift_register;
+                                    _read_data          =   read_shift_register[DATA_WIDTH-1:0];
+                                    _read_data_valid    =   1;
+                                end
+                                else begin
+                                    _end_of_burst_word = 1;
+                                end
 
                                 if (saved_burst_count <= 1) begin
                                     _read_data_valid    =   0;
@@ -394,6 +411,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_data_valid                 <=  0;
         read_long_data                  <=  0;
         burst_data_ready                <=  0;
+        end_of_burst_word               <=  0;
     end
     else begin
         state                           <=  _state;
@@ -417,6 +435,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_data_valid                 <=  _read_data_valid;
         read_long_data                  <=  _read_long_data;
         burst_data_ready                <=  _burst_data_ready;
+        end_of_burst_word               <=  _end_of_burst_word;
     end
 end
 

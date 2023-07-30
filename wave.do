@@ -21,6 +21,29 @@ add wave -noupdate -group spi_burst_receiver /testbench/spi_burst_receiver/_busy
 add wave -noupdate -group spi_burst_receiver /testbench/spi_burst_receiver/_data_valid
 add wave -noupdate -group spi_burst_receiver /testbench/spi_burst_receiver/_memory_address
 add wave -noupdate -group spi_burst_receiver /testbench/spi_burst_receiver/_data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/clock
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/reset_n
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_clock
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/chip_select
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_in
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/clock_polarity
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/clock_phase
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_out
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/read_data_valid
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_serial_data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_serial_clock_delay
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_clock_delay
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_clock_positive_edge
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/serial_clock_negative_edge
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/counter
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_counter
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_read_data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/read_data
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/skip
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_skip
+add wave -noupdate -group spi_slave /testbench/spi_slave_sim_model/_read_data_valid
 add wave -noupdate -expand -group spi_master /testbench/spi_master/clock
 add wave -noupdate -expand -group spi_master /testbench/spi_master/reset_n
 add wave -noupdate -expand -group spi_master /testbench/spi_master/data
@@ -77,29 +100,10 @@ add wave -noupdate -expand -group spi_master /testbench/spi_master/write_shift_r
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_write_shift_register
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_shift_register
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_read_shift_register
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/clock
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/reset_n
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_clock
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/chip_select
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_in
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/clock_polarity
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/clock_phase
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_out
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/_serial_data
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_data
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/_serial_clock_delay
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_clock_delay
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_clock_positive_edge
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/serial_clock_negative_edge
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/counter
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/_counter
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/data
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/_read_data
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/read_data
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/skip
-add wave -noupdate -expand -group spi_slave /testbench/spi_slave_sim_model/_skip
+add wave -noupdate -expand -group spi_master /testbench/spi_master/end_of_burst_word
+add wave -noupdate -expand -group spi_master /testbench/spi_master/_end_of_burst_word
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {148030000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {252130000 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 343
 configure wave -valuecolwidth 100
@@ -115,4 +119,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {109829723 ps} {165734747 ps}
+WaveRestoreZoom {0 ps} {894480384 ps}

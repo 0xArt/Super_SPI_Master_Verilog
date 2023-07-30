@@ -127,6 +127,7 @@ wire    spi_slave_sim_model_clock_polarity;
 wire    spi_slave_sim_model_clock_phase;
 
 wire    spi_slave_sim_model_serial_out;
+wire    spi_slave_sim_model_read_data_valid;
 
 spi_slave_sim_model spi_slave_sim_model(
     .clock                  (spi_slave_sim_model_clock),
@@ -137,7 +138,8 @@ spi_slave_sim_model spi_slave_sim_model(
     .clock_polarity         (spi_slave_sim_model_clock_polarity),
     .clock_phase            (spi_slave_sim_model_clock_phase),
 
-    .serial_out             (spi_slave_sim_model_serial_out)
+    .serial_out             (spi_slave_sim_model_serial_out),
+    .read_data_valid        (spi_slave_sim_model_read_data_valid)
 );
 
 
@@ -186,11 +188,17 @@ initial begin
     clock_phase     = 1;
     case_000();
     case_001();
-    /*
     case_002();
     case_003();
-    */
 
+    $display("Setting clock polarity to one");
+    clock_polarity  = 1;
+    $display("Setting clock phase to one");
+    clock_phase     = 1;
+    case_000();
+    case_001();
+    case_002();
+    case_003();
 
     $display("Tests have finsihed");
     $stop();
