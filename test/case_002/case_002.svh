@@ -22,6 +22,7 @@
 `define _case_002_svh_
 
 task case_002();
+    $display("Running case 002");
     $display("Doing a burst write of size three starting from address h7777");
     $display("Configuring master");
     @(posedge testbench.clock);

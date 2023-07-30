@@ -22,6 +22,7 @@
 `define _case_001_svh_
 
 task case_001();
+    $display("Running case 001");
     $display(" Reading from address h7ABC");
     $display("Configuring master");
     @(posedge testbench.clock);

@@ -25,6 +25,8 @@ module spi_slave_sim_model(
     input   wire    serial_clock,
     input   wire    chip_select,
     input   wire    serial_in,
+    input   wire    clock_polarity,
+    input   wire    clock_phase,
 
     output  wire    serial_out
 );
@@ -56,11 +58,43 @@ always_comb begin
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
 
     if (!chip_select) begin
-        if (serial_clock_positive_edge) begin
-            _read_data = {read_data[30:0], serial_in};
+
+        if (clock_polarity == 0) begin
+            if (clock_phase == 0) begin
+                if (serial_clock_positive_edge) begin
+                    _read_data = {read_data[30:0], serial_in};
+                end
+                if (serial_clock_negative_edge) begin
+                    _counter    =   counter - 1;
+                end
+            end
+            else begin
+                if (serial_clock_negative_edge) begin
+                    _read_data = {read_data[30:0], serial_in};
+                end
+                if (serial_clock_positive_edge) begin
+                    _counter    =   counter - 1;
+                end
+            end
         end
-        if (serial_clock_negative_edge) begin
-            _counter    =   counter - 1;
+
+        if (clock_polarity == 1) begin
+            if (clock_phase == 0) begin
+                if (serial_clock_negative_edge) begin
+                    _read_data = {read_data[30:0], serial_in};
+                end
+                if (serial_clock_positive_edge) begin
+                    _counter    =   counter - 1;
+                end
+            end
+            else begin
+                if (serial_clock_positive_edge) begin
+                    _read_data = {read_data[30:0], serial_in};
+                end
+                if (serial_clock_negative_edge) begin
+                    _counter    =   counter - 1;
+                end
+            end
         end
     end
 end

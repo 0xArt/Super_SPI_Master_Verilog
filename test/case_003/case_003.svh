@@ -22,12 +22,13 @@
 `define _case_003_svh_
 
 task case_003();
+    $display("Running case 003");
     $display("Doing a burst read of size three starting from address h8888");
     $display("Configuring master");
     @(posedge testbench.clock);
     testbench.rw                = 1;            //read operation
     testbench.address           = 15'h8888;
-    testbench.data_to_write     = 16'hBEEF;
+    testbench.data_to_write     = 16'hF000;
     testbench.divider           = 16'h03;       //divider value for serial clock
     testbench.burst_count       = 16'h03;       //triple round burst
     testbench.burst_enable      = 1;

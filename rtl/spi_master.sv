@@ -34,7 +34,7 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDRESS_WIDTH = 15)
     input   wire                                    clock_polarity,
     input   wire                                    master_in_slave_out,
 
-    output  reg                                     serial_clock,
+    output  logic                                   serial_clock,
     output  reg     [DATA_WIDTH-1:0]                read_data,
     output  reg                                     busy,
     output  reg                                     slave_select,
@@ -58,7 +58,8 @@ typedef enum
 
 state_type                                      _state;
 state_type                                      state;
-logic                                           _serial_clock;
+reg                                             internal_serial_clock;
+logic                                           _internal_serial_clock;
 logic       [DATA_WIDTH-1:0]                    _read_data;
 logic                                           _busy;
 logic                                           _slave_select;
@@ -95,7 +96,7 @@ logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_shift_register;
 always_comb begin
     _state                  =   state;
     _process_counter        =   process_counter;
-    _serial_clock           =   serial_clock;
+    _internal_serial_clock  =   internal_serial_clock;
     _read_data              =   read_data;
     _busy                   =   busy;
     _slave_select           =   slave_select;
@@ -114,6 +115,13 @@ always_comb begin
     _read_long_data         =   read_long_data;
     _burst_data_ready       =   burst_data_ready;
     _read_data_valid        =   0;
+
+    if (saved_clock_polarity == 0) begin
+        serial_clock    =   internal_serial_clock;
+    end
+    else begin
+        serial_clock    =   !internal_serial_clock;
+    end
 
     if (divider_counter == divider) begin
         _divider_counter    =   0;
@@ -134,8 +142,9 @@ always_comb begin
             _saved_address          =   address;
             _saved_data             =   data;
             _busy                   =   busy;
-            _write_shift_register   =   write_shift_register;
-            _read_shift_register    =   read_shift_register;
+            _bit_counter            =   0;
+            _write_shift_register   =   0;
+            _read_shift_register    =   0;
 
             if (enable) begin
                 _busy   =   1;
@@ -150,6 +159,7 @@ always_comb begin
 
                 if (saved_clock_phase == 0) begin
                     _master_out_slave_in    =   saved_address[ADDRESS_WIDTH-1];
+                    _write_shift_register   =   {saved_address[ADDRESS_WIDTH-2:0], saved_read_write, saved_data, 1'b0};
                 end
             end
         end
@@ -159,16 +169,13 @@ always_comb begin
                     0: begin
                         _process_counter    =   1;
 
-                        if (bit_counter != 0 && saved_clock_phase == 1) begin
+                        if (saved_clock_phase == 1) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
-                        end
-                        if (bit_counter == 0 && saved_clock_phase == 0) begin
-                            _write_shift_register = {write_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0], 1'b0};
                         end
                     end
                     1: begin
-                        _serial_clock       =   1;
-                        _process_counter    =   2;
+                        _internal_serial_clock  =   1;
+                        _process_counter        =   2;
 
                         if (saved_clock_phase == 1) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -183,8 +190,8 @@ always_comb begin
                         end
                     end
                     3: begin
-                        _serial_clock       =   0;
-                        _process_counter    =   0;
+                        _internal_serial_clock  =   0;
+                        _process_counter        =   0;
 
                         if (saved_clock_phase == 0) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -221,8 +228,8 @@ always_comb begin
                         end
                     end
                     1: begin
-                        _process_counter    =   2;
-                        _serial_clock       =   1;
+                        _process_counter        =   2;
+                        _internal_serial_clock  =   1;
 
                         if (saved_clock_phase == 1) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -242,8 +249,8 @@ always_comb begin
                         end
                     end
                     3: begin
-                        _process_counter    =   0;
-                        _serial_clock       =   0;
+                        _process_counter        =   0;
+                        _internal_serial_clock  =   0;
 
                         if (saved_clock_phase == 0) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -277,14 +284,12 @@ always_comb begin
                         _burst_data_ready   =   0;
 
                         if (saved_clock_phase == 1) begin
-                            if (saved_clock_phase == 0) begin
-                                _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
-                            end
+                            _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
                     end
                     1: begin
-                        _process_counter    =   2;
-                        _serial_clock       =   1;
+                        _process_counter        =   2;
+                        _internal_serial_clock  =   1;
 
                         if (saved_clock_phase == 1) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -299,8 +304,8 @@ always_comb begin
                         end
                     end
                     3: begin
-                        _process_counter    =   0;
-                        _serial_clock       =   0;
+                        _process_counter        =   0;
+                        _internal_serial_clock  =   0;
 
                         if (saved_clock_phase == 0) begin
                             _master_out_slave_in    =   write_shift_register[DATA_WIDTH+ADDRESS_WIDTH];
@@ -368,7 +373,7 @@ always_ff @(posedge clock or negedge reset_n) begin
     if (!reset_n) begin
         state                           <=  S_IDLE;
         process_counter                 <=  0;
-        serial_clock                    <=  0;
+        internal_serial_clock           <=  0;
         read_data                       <=  0;
         busy                            <=  0;
         slave_select                    <=  0;
@@ -391,7 +396,7 @@ always_ff @(posedge clock or negedge reset_n) begin
     else begin
         state                           <=  _state;
         process_counter                 <=  _process_counter;
-        serial_clock                    <=  _serial_clock;
+        internal_serial_clock           <=  _internal_serial_clock;
         read_data                       <=  _read_data;
         busy                            <=  _busy;
         slave_select                    <=  _slave_select;

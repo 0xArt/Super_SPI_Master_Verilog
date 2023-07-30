@@ -39,6 +39,8 @@ reg     [15:0]  divider             =   16'h0003;
 reg     [15:0]  data_to_write       =   16'h00;
 reg     [15:0]  burst_count         =   16'h00;
 reg             burst_enable        =   0;
+reg             clock_phase         =   0;
+reg             clock_polarity      =   0;
 
 wire                                    spi_master_clock;
 wire                                    spi_master_reset_n;
@@ -120,6 +122,8 @@ wire    spi_slave_sim_model_reset_n;
 wire    spi_slave_sim_model_serial_clock;
 wire    spi_slave_sim_model_chip_select;
 wire    spi_slave_sim_model_serial_in;
+wire    spi_slave_sim_model_clock_polarity;
+wire    spi_slave_sim_model_clock_phase;
 
 wire    spi_slave_sim_model_serial_out;
 
@@ -129,6 +133,8 @@ spi_slave_sim_model spi_slave_sim_model(
     .serial_clock           (spi_slave_sim_model_serial_clock),
     .chip_select            (spi_slave_sim_model_chip_select),
     .serial_in              (spi_slave_sim_model_serial_in),
+    .clock_polarity         (spi_slave_sim_model_clock_polarity),
+    .clock_phase            (spi_slave_sim_model_clock_phase),
 
     .serial_out             (spi_slave_sim_model_serial_out)
 );
@@ -152,48 +158,57 @@ initial begin
     reset_n = 1;
     #100;
 
-    $display("Running case 000");
+    $display("Setting clock polarity to zero");
+    clock_polarity = 0;
+    $display("Setting clock phase to zero");
+    clock_phase = 0;
     case_000();
-
-    $display("Running case 001");
     case_001();
-
-    $display("Running case 002");
     case_002();
-
-    $display("Running case 003");
     case_003();
+
+    $display("Setting clock polarity to one");
+    clock_polarity  = 1;
+    $display("Setting clock phase to zero");
+    clock_phase     = 0;
+    case_000();
+    case_001();
+    case_002();
+    case_003();
+
 
     $display("Tests have finsihed");
     $stop();
 end
 
 
-assign spi_master_clock                 =   clock;
-assign spi_master_reset_n               =   reset_n;
-assign spi_master_data                  =   data_to_write;
-assign spi_master_address               =   address;
-assign spi_master_read_write            =   rw;
-assign spi_master_enable                =   enable;
-assign spi_master_burst_enable          =   burst_enable;
-assign spi_master_burst_count           =   burst_count;
-assign spi_master_divider               =   divider;
-assign spi_master_clock_phase           =   0;
-assign spi_master_clock_polarity        =   0;
-assign spi_master_master_in_slave_out   =   spi_slave_sim_model_serial_out;
+assign spi_master_clock                     =   clock;
+assign spi_master_reset_n                   =   reset_n;
+assign spi_master_data                      =   data_to_write;
+assign spi_master_address                   =   address;
+assign spi_master_read_write                =   rw;
+assign spi_master_enable                    =   enable;
+assign spi_master_burst_enable              =   burst_enable;
+assign spi_master_burst_count               =   burst_count;
+assign spi_master_divider                   =   divider;
+assign spi_master_clock_phase               =   clock_phase;
+assign spi_master_clock_polarity            =   clock_polarity;
+assign spi_master_master_in_slave_out       =   spi_slave_sim_model_serial_out;
 
-assign spi_slave_sim_model_clock        =   clock;
-assign spi_slave_sim_model_reset_n      =   reset_n;
-assign spi_slave_sim_model_serial_in    =   spi_master_master_out_slave_in;
-assign spi_slave_sim_model_serial_clock =   spi_master_serial_clock;
-assign spi_slave_sim_model_chip_select  =   spi_master_slave_select;
+assign spi_slave_sim_model_clock            =   clock;
+assign spi_slave_sim_model_reset_n          =   reset_n;
+assign spi_slave_sim_model_serial_in        =   spi_master_master_out_slave_in;
+assign spi_slave_sim_model_serial_clock     =   spi_master_serial_clock;
+assign spi_slave_sim_model_chip_select      =   spi_master_slave_select;
+assign spi_slave_sim_model_clock_polarity   =   clock_polarity;
+assign spi_slave_sim_model_clock_phase      =   clock_phase;
 
-assign spi_burst_receiver_clock         =   clock;
-assign spi_burst_receiver_reset_n       =   reset_n;
-assign spi_burst_receiver_enable        =   burst_enable && spi_master_read_write;
-assign spi_burst_receiver_burst_count   =   burst_count;
-assign spi_burst_receiver_data_enable   =   spi_master_read_data_valid;
-assign spi_burst_receiver_burst_data    =   spi_master_read_data;
+assign spi_burst_receiver_clock             =   clock;
+assign spi_burst_receiver_reset_n           =   reset_n;
+assign spi_burst_receiver_enable            =   burst_enable && spi_master_read_write;
+assign spi_burst_receiver_burst_count       =   burst_count;
+assign spi_burst_receiver_data_enable       =   spi_master_read_data_valid;
+assign spi_burst_receiver_burst_data        =   spi_master_read_data;
 
 
 endmodule
