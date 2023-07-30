@@ -25,10 +25,11 @@
 `include "./case_003/case_003.svh"
 module testbench;
 
-localparam  DATA_WIDTH      =   16;
-localparam  ADDRESS_WIDTH   =   15;
+localparam  DATA_WIDTH              =   16;
+localparam  ADDRESS_WIDTH           =   15;
+localparam  CLOCK_FREQUENCY         =   50_000_000;
+localparam  CLOCK_PERIOD            =   1e9/CLOCK_FREQUENCY;
 
-real            clock_delay_50      =   ((1/ (50e6))/2)*(1e9);
 reg             clock               =   0;
 reg             reset_n             =   1;
 reg             enable              =   0;
@@ -141,9 +142,12 @@ spi_slave_sim_model spi_slave_sim_model(
 
 
 //clock generation
-always begin
-    #clock_delay_50;
-    clock   = ~clock;
+initial begin
+    clock   =   0;
+    forever begin
+        #(CLOCK_PERIOD/2);
+        clock   =   ~clock;
+    end
 end
 
 
@@ -175,6 +179,17 @@ initial begin
     case_001();
     case_002();
     case_003();
+
+    $display("Setting clock polarity to zero");
+    clock_polarity  = 0;
+    $display("Setting clock phase to one");
+    clock_phase     = 1;
+    case_000();
+    case_001();
+    /*
+    case_002();
+    case_003();
+    */
 
 
     $display("Tests have finsihed");

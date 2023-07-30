@@ -43,6 +43,8 @@ logic   [4:0]   _counter;
 wire    [31:0]  data;
 logic   [31:0]  _read_data;
 reg     [31:0]  read_data;
+reg             skip;
+logic           _skip;
 
 assign  serial_out      =   (!chip_select) ? serial_data : 1'bZ;
 assign  data            =   32'hACDC1112;
@@ -53,12 +55,12 @@ always_comb begin
     _serial_clock_delay[0]      =   serial_clock;
     _serial_clock_delay[1]      =   serial_clock_delay[0];
     _serial_clock_delay[2]      =   serial_clock_delay[1];
+    _skip                       =   skip;
     _read_data                  =   read_data;
     serial_clock_positive_edge  =   !serial_clock_delay[1] && serial_clock_delay[0];
     serial_clock_negative_edge  =   serial_clock_delay[1]  && !serial_clock_delay[0];
 
     if (!chip_select) begin
-
         if (clock_polarity == 0) begin
             if (clock_phase == 0) begin
                 if (serial_clock_positive_edge) begin
@@ -73,7 +75,16 @@ always_comb begin
                     _read_data = {read_data[30:0], serial_in};
                 end
                 if (serial_clock_positive_edge) begin
-                    _counter    =   counter - 1;
+                    if (skip) begin
+                        _skip = 0;
+                    end
+                    else begin
+                        _counter    =   counter - 1;
+
+                        if (counter == 0) begin
+                            //_skip = 1;
+                        end
+                    end
                 end
             end
         end
@@ -97,6 +108,10 @@ always_comb begin
             end
         end
     end
+    else begin
+        _skip       = 1;
+        _counter    = 31;
+    end
 end
 
 always_ff @(posedge clock or negedge reset_n) begin
@@ -106,6 +121,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         counter             <=  31;
         serial_data         <=  0;
         read_data           <=  0;
+        skip                <=  1;
     end
     else begin
         serial_data         <=  _serial_data;
@@ -113,6 +129,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         counter             <=  _counter;
         serial_data         <=  _serial_data;
         read_data           <=  _read_data;
+        skip                <=  _skip;
     end
 end
 

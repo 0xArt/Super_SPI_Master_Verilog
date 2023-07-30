@@ -142,9 +142,11 @@ always_comb begin
             _saved_address          =   address;
             _saved_data             =   data;
             _busy                   =   busy;
+            _internal_serial_clock  =   0;
             _bit_counter            =   0;
             _write_shift_register   =   0;
             _read_shift_register    =   0;
+            _process_counter        =   0;
 
             if (enable) begin
                 _busy   =   1;
@@ -241,7 +243,6 @@ always_comb begin
 
                         if (saved_clock_phase == 0) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
-
                         end
                         if (burst_data_ready == 1) begin
                             _burst_data_ready                                                   = 0;
@@ -317,12 +318,13 @@ always_comb begin
 
                             if (saved_burst_enable) begin
                                 _saved_burst_count  =   saved_burst_count - 1;
-                                _read_long_data     = read_shift_register;
-                                _read_data          = read_shift_register[DATA_WIDTH-1:0];
+                                _read_long_data     =   read_shift_register;
+                                _read_data          =   read_shift_register[DATA_WIDTH-1:0];
                                 _read_data_valid    =   1;
 
                                 if (saved_burst_count <= 1) begin
-                                    _state = S_STOP;
+                                    _read_data_valid    =   0;
+                                    _state              =   S_STOP;
                                 end
                             end
                             else begin
