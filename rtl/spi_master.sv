@@ -391,11 +391,11 @@ end
 always_ff @(posedge clock or negedge reset_n) begin
     if (!reset_n) begin
         state                           <=  S_IDLE;
+        slave_select                    <=  1;
         process_counter                 <=  0;
         internal_serial_clock           <=  0;
         read_data                       <=  0;
         busy                            <=  0;
-        slave_select                    <=  0;
         master_out_slave_in             <=  0;
         bit_counter                     <=  0;
         saved_clock_phase               <=  0;

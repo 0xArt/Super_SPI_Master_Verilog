@@ -55,12 +55,14 @@ add wave -noupdate -expand -group spi_master /testbench/spi_master/burst_count
 add wave -noupdate -expand -group spi_master /testbench/spi_master/divider
 add wave -noupdate -expand -group spi_master /testbench/spi_master/clock_phase
 add wave -noupdate -expand -group spi_master /testbench/spi_master/clock_polarity
-add wave -noupdate -expand -group spi_master /testbench/spi_master/master_in_slave_out
-add wave -noupdate -expand -group spi_master /testbench/spi_master/serial_clock
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_data
 add wave -noupdate -expand -group spi_master /testbench/spi_master/busy
+add wave -noupdate -expand -group spi_master -color Gold /testbench/spi_master/serial_clock
 add wave -noupdate -expand -group spi_master /testbench/spi_master/slave_select
 add wave -noupdate -expand -group spi_master /testbench/spi_master/master_out_slave_in
+add wave -noupdate -expand -group spi_master /testbench/spi_master/master_in_slave_out
+add wave -noupdate -expand -group spi_master -color Red /testbench/spi_master/sample
+add wave -noupdate -expand -group spi_master /testbench/spi_master/divider_tick
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_long_data
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_data_valid
 add wave -noupdate -expand -group spi_master /testbench/spi_master/burst_data_ready
@@ -89,7 +91,6 @@ add wave -noupdate -expand -group spi_master /testbench/spi_master/saved_burst_c
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_saved_burst_count
 add wave -noupdate -expand -group spi_master /testbench/spi_master/divider_counter
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_divider_counter
-add wave -noupdate -expand -group spi_master /testbench/spi_master/divider_tick
 add wave -noupdate -expand -group spi_master /testbench/spi_master/saved_address
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_saved_address
 add wave -noupdate -expand -group spi_master /testbench/spi_master/saved_data
@@ -103,7 +104,7 @@ add wave -noupdate -expand -group spi_master /testbench/spi_master/_read_shift_r
 add wave -noupdate -expand -group spi_master /testbench/spi_master/end_of_burst_word
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_end_of_burst_word
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {252130000 ps} 0}
+WaveRestoreCursors {{Cursor 1} {11070000 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 343
 configure wave -valuecolwidth 100
@@ -119,4 +120,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ps
 update
-WaveRestoreZoom {0 ps} {894480384 ps}
+WaveRestoreZoom {10297665 ps} {12044697 ps}
