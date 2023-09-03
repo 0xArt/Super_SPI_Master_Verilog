@@ -195,8 +195,10 @@ initial begin
     clock_polarity  = 1;
     $display("Setting clock phase to one");
     clock_phase     = 1;
+    case_000();
     case_001();
     case_002();
+    case_003();
 
     $display("Tests have finsihed");
     $stop();
