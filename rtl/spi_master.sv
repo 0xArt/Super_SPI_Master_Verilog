@@ -29,6 +29,7 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDRESS_WIDTH = 15)
     input   wire                                    enable,
     input   wire                                    burst_enable,
     input   wire    [15:0]                          burst_count,
+    input   wire                                    burst_data_enable,
     input   wire    [15:0]                          divider,
     input   wire                                    clock_phase,
     input   wire                                    clock_polarity,
@@ -41,8 +42,10 @@ module spi_master #(parameter DATA_WIDTH = 16, parameter ADDRESS_WIDTH = 15)
     output  reg                                     master_out_slave_in,
     output  reg     [DATA_WIDTH+ADDRESS_WIDTH:0]    read_long_data,
     output  reg                                     read_data_valid,
-    output  reg                                     burst_data_ready
+    output  reg                                     burst_data_ready,
+    output  reg                                     burst_underflow
 );
+
 
 typedef enum
 {
@@ -79,6 +82,8 @@ reg                                             saved_read_write;
 logic                                           _saved_read_write;
 reg         [15:0]                              saved_burst_count;
 logic       [15:0]                              _saved_burst_count;
+reg         [15:0]                              saved_divider;
+logic       [15:0]                              _saved_divider;
 reg         [15:0]                              divider_counter;
 logic       [15:0]                              _divider_counter;
 logic                                           divider_tick;
@@ -94,6 +99,14 @@ reg         [DATA_WIDTH+ADDRESS_WIDTH:0]        read_shift_register;
 logic       [DATA_WIDTH+ADDRESS_WIDTH:0]        _read_shift_register;
 reg                                             end_of_burst_word;
 logic                                           _end_of_burst_word;
+reg         [DATA_WIDTH-1:0]                    next_data;
+logic       [DATA_WIDTH-1:0]                    _next_data;
+reg                                             next_full;
+logic                                           _next_full;
+reg         [15:0]                              fetch_remaining;
+logic       [15:0]                              _fetch_remaining;
+logic                                           burst_data_crossing;
+logic                                           _burst_underflow;
 
 always_comb begin
     _state                  =   state;
@@ -108,6 +121,7 @@ always_comb begin
     _saved_clock_polarity   =   saved_clock_polarity;
     _saved_read_write       =   saved_read_write;
     _saved_burst_count      =   saved_burst_count;
+    _saved_divider          =   saved_divider;
     _divider_counter        =   divider_counter;
     _saved_address          =   saved_address;
     _saved_data             =   saved_data;
@@ -117,7 +131,20 @@ always_comb begin
     _read_long_data         =   read_long_data;
     _burst_data_ready       =   burst_data_ready;
     _end_of_burst_word      =   end_of_burst_word;
+    _next_data              =   next_data;
+    _next_full              =   next_full;
+    _fetch_remaining        =   fetch_remaining;
+    _burst_underflow        =   burst_underflow;
     _read_data_valid        =   0;
+
+    //prefetch capture side: a burst word crosses whenever ready and enable meet
+    burst_data_crossing     =   burst_data_ready && burst_data_enable;
+
+    if (burst_data_crossing) begin
+        _next_data      =   data;
+        _next_full      =   1;
+        _fetch_remaining    =   fetch_remaining - 1;
+    end
 
     if (saved_clock_polarity == 0) begin
         serial_clock    =   internal_serial_clock;
@@ -126,7 +153,11 @@ always_comb begin
         serial_clock    =   !internal_serial_clock;
     end
 
-    if (divider_counter == divider) begin
+    if (state == S_IDLE) begin
+        _divider_counter    =   0;
+        divider_tick        =   0;
+    end
+    else if (divider_counter == saved_divider) begin
         _divider_counter    =   0;
         divider_tick        =   1;
     end
@@ -141,6 +172,7 @@ always_comb begin
             _saved_clock_polarity   =   clock_polarity;
             _saved_read_write       =   read_write;
             _saved_burst_count      =   burst_count;
+            _saved_divider          =   divider;
             _saved_burst_enable     =   burst_enable;
             _saved_address          =   address;
             _saved_data             =   data;
@@ -151,10 +183,14 @@ always_comb begin
             _read_shift_register    =   0;
             _process_counter        =   0;
             _end_of_burst_word      =   0;
+            _next_full              =   0;
+            //words still to come over the handshake: all but the first
+            _fetch_remaining        =   (burst_enable && burst_count > 1) ? burst_count - 1 : 0;
 
             if (enable) begin
-                _busy   =   1;
-                _state  =   S_SET_SS;
+                _busy               =   1;
+                _burst_underflow    =   0;
+                _state              =   S_SET_SS;
             end
         end
         S_SET_SS: begin
@@ -226,9 +262,6 @@ always_comb begin
                     0: begin
                         _process_counter    =   1;
 
-                        if (bit_counter == (DATA_WIDTH - 1) && saved_burst_enable == 1 && saved_burst_count > 1) begin
-                            _burst_data_ready = 1;
-                        end
                         if (saved_clock_phase == 1) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
@@ -248,9 +281,22 @@ always_comb begin
                         if (saved_clock_phase == 0) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
                         end
-                        if (burst_data_ready == 1) begin
-                            _burst_data_ready                                                   = 0;
-                            _write_shift_register[DATA_WIDTH+ADDRESS_WIDTH:ADDRESS_WIDTH+1]     = data;
+                        //word boundary: the next burst word must be in the prefetch
+                        //buffer, or be crossing the handshake on this very clock
+                        if (bit_counter == (DATA_WIDTH-1) && saved_burst_enable == 1 && saved_burst_count > 1) begin
+                            if (next_full) begin
+                                _write_shift_register[DATA_WIDTH+ADDRESS_WIDTH:ADDRESS_WIDTH+1] = next_data;
+                                _next_full                                                      = 0;
+                            end
+                            else if (burst_data_crossing) begin
+                                _write_shift_register[DATA_WIDTH+ADDRESS_WIDTH:ADDRESS_WIDTH+1] = data;
+                                _next_full                                                      = 0;
+                            end
+                            else begin
+                                //underrun: the host missed the boundary, so the burst
+                                //ends after this word instead of resending stale data
+                                _burst_underflow = 1;
+                            end
                         end
                     end
                     3: begin
@@ -267,7 +313,7 @@ always_comb begin
                             if (saved_burst_enable == 1) begin
                                 _saved_burst_count = saved_burst_count - 1;
 
-                                if (saved_burst_count <= 1) begin
+                                if (saved_burst_count <= 1 || burst_underflow) begin
                                     _state = S_STOP;
                                 end
                             end
@@ -287,7 +333,6 @@ always_comb begin
                 case (process_counter)
                     0: begin
                         _process_counter    =   1;
-                        _burst_data_ready   =   0;
 
                         if (saved_clock_phase == 1) begin
                             _read_shift_register  = {read_shift_register[DATA_WIDTH+ADDRESS_WIDTH-1:0],master_in_slave_out};
@@ -386,9 +431,15 @@ always_comb begin
             end
         end
     endcase
+
+
+    _burst_data_ready = (_state == S_SET_SS || _state == S_TRANSMIT_ADDRESS || _state == S_TRANSMIT_DATA) &&
+                        _saved_burst_enable && !_saved_read_write && !_burst_underflow && !_next_full &&
+                        (_fetch_remaining != 0);
 end
 
-always_ff @(posedge clock or negedge reset_n) begin
+
+always_ff @(posedge clock) begin
     if (!reset_n) begin
         state                           <=  S_IDLE;
         slave_select                    <=  1;
@@ -398,8 +449,9 @@ always_ff @(posedge clock or negedge reset_n) begin
         busy                            <=  0;
         master_out_slave_in             <=  0;
         bit_counter                     <=  0;
-        saved_clock_phase               <=  0;
-        saved_clock_polarity            <=  0;
+        saved_clock_phase               <=  clock_phase;
+        saved_clock_polarity            <=  clock_polarity;
+        saved_divider                   <=  divider;
         divider_counter                 <=  0;
         saved_read_write                <=  0;
         saved_burst_count               <=  0;
@@ -412,6 +464,10 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_long_data                  <=  0;
         burst_data_ready                <=  0;
         end_of_burst_word               <=  0;
+        next_data                       <=  0;
+        next_full                       <=  0;
+        fetch_remaining                 <=  0;
+        burst_underflow                 <=  0;
     end
     else begin
         state                           <=  _state;
@@ -424,6 +480,7 @@ always_ff @(posedge clock or negedge reset_n) begin
         bit_counter                     <=  _bit_counter;
         saved_clock_phase               <=  _saved_clock_phase;
         saved_clock_polarity            <=  _saved_clock_polarity;
+        saved_divider                   <=  _saved_divider;
         divider_counter                 <=  _divider_counter;
         saved_read_write                <=  _saved_read_write;
         saved_burst_count               <=  _saved_burst_count;
@@ -436,6 +493,10 @@ always_ff @(posedge clock or negedge reset_n) begin
         read_long_data                  <=  _read_long_data;
         burst_data_ready                <=  _burst_data_ready;
         end_of_burst_word               <=  _end_of_burst_word;
+        next_data                       <=  _next_data;
+        next_full                       <=  _next_full;
+        fetch_remaining                 <=  _fetch_remaining;
+        burst_underflow                 <=  _burst_underflow;
     end
 end
 

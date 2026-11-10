@@ -23,6 +23,9 @@
 `include "./case_001/case_001.svh"
 `include "./case_002/case_002.svh"
 `include "./case_003/case_003.svh"
+`include "./case_004/case_004.svh"
+`include "./case_005/case_005.svh"
+`include "./case_006/case_006.svh"
 module testbench;
 
 localparam  DATA_WIDTH              =   16;
@@ -40,6 +43,7 @@ reg     [15:0]  divider             =   16'h0003;
 reg     [15:0]  data_to_write       =   16'h00;
 reg     [15:0]  burst_count         =   16'h00;
 reg             burst_enable        =   0;
+reg             burst_data_enable   =   0;
 reg             clock_phase         =   0;
 reg             clock_polarity      =   0;
 
@@ -51,6 +55,7 @@ wire                                    spi_master_read_write;
 wire                                    spi_master_enable;
 wire                                    spi_master_burst_enable;
 wire    [15:0]                          spi_master_burst_count;
+wire                                    spi_master_burst_data_enable;
 wire    [15:0]                          spi_master_divider;
 wire                                    spi_master_clock_phase;
 wire                                    spi_master_clock_polarity;
@@ -64,6 +69,7 @@ wire                                    spi_master_master_out_slave_in;
 wire    [DATA_WIDTH+ADDRESS_WIDTH:0]    spi_master_read_long_data;
 wire                                    spi_master_read_data_valid;
 wire                                    spi_master_burst_data_ready;
+wire                                    spi_master_burst_underflow;
 
 
 spi_master #(.DATA_WIDTH(DATA_WIDTH),.ADDRESS_WIDTH(ADDRESS_WIDTH))
@@ -76,6 +82,7 @@ spi_master(
     .enable                 (spi_master_enable),
     .burst_enable           (spi_master_burst_enable),
     .burst_count            (spi_master_burst_count),
+    .burst_data_enable      (spi_master_burst_data_enable),
     .divider                (spi_master_divider),
     .clock_phase            (spi_master_clock_phase),
     .clock_polarity         (spi_master_clock_polarity),
@@ -88,7 +95,8 @@ spi_master(
     .master_out_slave_in    (spi_master_master_out_slave_in),
     .read_long_data         (spi_master_read_long_data),
     .read_data_valid        (spi_master_read_data_valid),
-    .burst_data_ready       (spi_master_burst_data_ready)
+    .burst_data_ready       (spi_master_burst_data_ready),
+    .burst_underflow        (spi_master_burst_underflow)
 );
 
 wire            spi_burst_receiver_clock;
@@ -141,6 +149,21 @@ spi_slave_sim_model spi_slave_sim_model(
     .serial_out             (spi_slave_sim_model_serial_out),
     .read_data_valid        (spi_slave_sim_model_read_data_valid)
 );
+
+
+//hands the next burst write word to the master over the burst_data_enable/ready
+//handshake; judged at the falling edge, where the registered ready has settled, so
+//enable drops right after exactly one crossing
+task automatic send_burst_word(input [DATA_WIDTH-1:0] value);
+    data_to_write       = value;
+    burst_data_enable   = 1;
+    forever begin
+        @(negedge clock);
+        if (spi_master_burst_data_ready) break;
+    end
+    @(posedge clock);
+    burst_data_enable   = 0;
+endtask
 
 
 //clock generation
@@ -200,6 +223,14 @@ initial begin
     case_002();
     case_003();
 
+    $display("Setting clock polarity to zero");
+    clock_polarity  = 0;
+    $display("Setting clock phase to zero");
+    clock_phase     = 0;
+    case_004();
+    case_005();
+    case_006();
+
     $display("Tests have finsihed");
     $stop();
 end
@@ -213,6 +244,7 @@ assign spi_master_read_write                =   rw;
 assign spi_master_enable                    =   enable;
 assign spi_master_burst_enable              =   burst_enable;
 assign spi_master_burst_count               =   burst_count;
+assign spi_master_burst_data_enable         =   burst_data_enable;
 assign spi_master_divider                   =   divider;
 assign spi_master_clock_phase               =   clock_phase;
 assign spi_master_clock_polarity            =   clock_polarity;

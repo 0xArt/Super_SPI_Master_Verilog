@@ -65,7 +65,11 @@ add wave -noupdate -expand -group spi_master -color Red /testbench/spi_master/sa
 add wave -noupdate -expand -group spi_master /testbench/spi_master/divider_tick
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_long_data
 add wave -noupdate -expand -group spi_master /testbench/spi_master/read_data_valid
+add wave -noupdate -expand -group spi_master /testbench/spi_master/burst_data_enable
 add wave -noupdate -expand -group spi_master /testbench/spi_master/burst_data_ready
+add wave -noupdate -expand -group spi_master /testbench/spi_master/burst_underflow
+add wave -noupdate -expand -group spi_master /testbench/spi_master/next_full
+add wave -noupdate -expand -group spi_master /testbench/spi_master/fetch_remaining
 add wave -noupdate -expand -group spi_master /testbench/spi_master/_state
 add wave -noupdate -expand -group spi_master /testbench/spi_master/state
 add wave -noupdate -expand -group spi_master /testbench/spi_master/internal_serial_clock

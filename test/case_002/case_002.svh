@@ -39,18 +39,25 @@ task case_002();
     $display("Master has started reading");
     testbench.enable        = 0;
     testbench.burst_enable  = 0;
-    @(posedge testbench.spi_slave_sim_model_read_data_valid);
-    @(posedge testbench.spi_master_burst_data_ready);
-    testbench.data_to_write     = 16'hF00D;
-    @(posedge testbench.spi_slave_sim_model_read_data_valid);
-    assert (testbench.spi_slave_sim_model.read_data == {testbench.address, testbench.rw, 16'hBEEF}) $display ("Slaved received correct data from master");
-        else $error("The data slave read does not match what the master put out. Expected %h but got %h", {testbench.address, testbench.rw, 16'hBEEF}, testbench.spi_slave_sim_model.read_data);
-    @(posedge testbench.spi_master_burst_data_ready);
-    testbench.data_to_write     = 16'hACDC;
-    @(posedge testbench.spi_slave_sim_model_read_data_valid);
-    assert (testbench.spi_slave_sim_model.read_data == 32'hBEEFF00D) $display ("Slaved received correct data from master");
-        else $error("The data slave read does not match what the master put out. Expected %h but got %h", 32'hBEEFF00D, testbench.spi_slave_sim_model.read_data);
+    fork
+        begin
+            //the remaining burst words cross the burst data handshake
+            testbench.send_burst_word(16'hF00D);
+            testbench.send_burst_word(16'hACDC);
+        end
+        begin
+            @(posedge testbench.spi_slave_sim_model_read_data_valid);
+            @(posedge testbench.spi_slave_sim_model_read_data_valid);
+            assert (testbench.spi_slave_sim_model.read_data == {testbench.address, testbench.rw, 16'hBEEF}) $display ("Slaved received correct data from master");
+                else $error("The data slave read does not match what the master put out. Expected %h but got %h", {testbench.address, testbench.rw, 16'hBEEF}, testbench.spi_slave_sim_model.read_data);
+            @(posedge testbench.spi_slave_sim_model_read_data_valid);
+            assert (testbench.spi_slave_sim_model.read_data == 32'hBEEFF00D) $display ("Slaved received correct data from master");
+                else $error("The data slave read does not match what the master put out. Expected %h but got %h", 32'hBEEFF00D, testbench.spi_slave_sim_model.read_data);
+        end
+    join
     @(negedge testbench.spi_master_busy);
+    assert (!testbench.spi_master_burst_underflow) $display ("No burst underflow was reported");
+        else $error("A burst that kept up with the master reported an underflow");
     $display("Master has finsihed reading");
     assert (testbench.spi_slave_sim_model.read_data == 32'hF00DACDC) $display ("Slaved received correct data from master");
         else $error("The data slave read does not match what the master put out. Expected %h but got %h", 32'hF00DACDC, testbench.spi_slave_sim_model.read_data);
