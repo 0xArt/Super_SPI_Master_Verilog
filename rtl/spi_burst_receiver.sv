@@ -53,6 +53,7 @@ logic   [15:0]  _memory_address;
 logic   [15:0]  _data;
 
 always_comb begin
+    _state                          =   state;
     _busy                           =   busy;
     _data                           =   data;
     _counter                        =   counter;
